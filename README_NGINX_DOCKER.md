@@ -29,6 +29,7 @@ docker compose down
 http://localhost:8080/
 http://localhost:8080/sales
 http://localhost:8080/sales-table
+http://localhost:8080/dashboard
 http://localhost:8080/context.md
 http://localhost:8080/guard_rails.md
 http://localhost:8080/skills.md

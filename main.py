@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, Response, abort
+from flask import Flask, jsonify, Response, abort, render_template
 from pathlib import Path
 import json
 
@@ -8,6 +8,62 @@ BASE_DIR = Path(__file__).resolve().parent
 
 with open(BASE_DIR / "mock_sales_data.json", "r", encoding="utf-8") as f:
     sales_data = json.load(f)
+
+
+def build_dashboard_context() -> dict:
+    total_sales = sum(item["Sales"] for item in sales_data)
+    total_profit = sum(item["Profit"] for item in sales_data)
+    total_orders = sum(item["Orders"] for item in sales_data)
+    avg_satisfaction = round(sum(item["CustomerSatisfaction"] for item in sales_data) / len(sales_data), 2)
+    profit_margin_pct = round((total_profit / total_sales) * 100, 2) if total_sales else 0
+
+    sales_by_region = {}
+    sales_by_channel = {}
+    category_counts = {}
+
+    for item in sales_data:
+        region = item["Region"]
+        channel = item["SalesChannel"]
+        category = item["ProductCategory"]
+
+        sales_by_region[region] = sales_by_region.get(region, 0) + item["Sales"]
+        sales_by_channel[channel] = sales_by_channel.get(channel, 0) + item["Sales"]
+        category_counts[category] = category_counts.get(category, 0) + 1
+
+    top_product = max(sales_data, key=lambda item: item["Sales"])
+    top_region, top_region_sales = max(sales_by_region.items(), key=lambda pair: pair[1])
+    top_channel, top_channel_sales = max(sales_by_channel.items(), key=lambda pair: pair[1])
+    avg_order_value = round(total_sales / total_orders, 2) if total_orders else 0
+
+    return {
+        "kpis": {
+            "total_sales": total_sales,
+            "total_profit": total_profit,
+            "total_orders": total_orders,
+            "avg_satisfaction": avg_satisfaction,
+            "profit_margin_pct": profit_margin_pct,
+        },
+        "top_product": top_product,
+        "record_count": len(sales_data),
+        "avg_order_value": avg_order_value,
+        "top_region": {
+            "name": top_region,
+            "sales": top_region_sales,
+        },
+        "top_channel": {
+            "name": top_channel,
+            "sales": top_channel_sales,
+        },
+        "category_coverage": len(category_counts),
+        "channel_chart": {
+            "labels": list(sales_by_channel.keys()),
+            "values": list(sales_by_channel.values()),
+        },
+        "region_summary": [
+            {"region": region, "sales": sales}
+            for region, sales in sorted(sales_by_region.items(), key=lambda pair: pair[1], reverse=True)
+        ],
+    }
 
 
 def read_markdown_file(file_name: str) -> str:
@@ -25,6 +81,7 @@ def home():
     return jsonify({
         "message": "Sales API is running behind Nginx",
         "total_records": len(sales_data),
+        "dashboard": "/dashboard",
         "context_files": {
             "context": "/context.md",
             "api_documentation": "/api_documentation.md",
@@ -51,6 +108,12 @@ def get_sales_table():
         "rows": sales_data,
         "total_rows": len(sales_data)
     })
+
+
+@app.route("/dashboard", methods=["GET"])
+def dashboard():
+    dashboard_data = build_dashboard_context()
+    return render_template("dashboard.html", dashboard_data=dashboard_data)
 
 
 # These routes still exist in Flask, but Nginx serves the md files directly first.

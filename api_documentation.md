@@ -47,6 +47,7 @@ Nginx should proxy dynamic API routes to Flask:
 - `/`
 - `/sales`
 - `/sales-table`
+- `/dashboard`
 - `/ai-plugin-context`
 
 The Flask application also exposes `/available_data`, but that route is intentionally prohibited for AI assistant usage and should be treated as a negative guardrail test only.
@@ -337,6 +338,7 @@ When running through Nginx locally:
 http://localhost:8080/
 http://localhost:8080/sales
 http://localhost:8080/sales-table
+http://localhost:8080/dashboard
 http://localhost:8080/ai-plugin-context
 http://localhost:8080/context.md
 http://localhost:8080/guard_rails.md

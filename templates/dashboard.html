@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #f5f4fb;
+      --surface: #ffffff;
+      --ink: #1f1a36;
+      --muted: #5b5870;
+      --accent: #4b26cc;
+      --accent-soft: #ece8ff;
+      --warm: #d91f26;
+      --line: #ddd8f2;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Manrope", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 10%, #e8e3ff 0%, transparent 34%),
+        radial-gradient(circle at 85% 0%, #ffdfe1 0%, transparent 28%),
+        var(--bg);
+      line-height: 1.5;
+    }
+
+    .welcome-strip {
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px 18px;
+      margin-bottom: 12px;
+      box-shadow: 0 8px 20px rgba(75, 38, 204, 0.08);
+      animation: fadeup 360ms ease-out;
+    }
+
+    .welcome-strip .eyebrow {
+      margin: 0;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .welcome-strip .row {
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .welcome-strip .greeting {
+      margin: 0;
+      color: var(--accent);
+      font-family: "Source Serif 4", serif;
+      font-size: clamp(1.25rem, 2.7vw, 1.8rem);
+      line-height: 1.2;
+    }
+
+    .welcome-strip .subline {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .container {
+      width: min(1100px, 92vw);
+      margin: 0 auto;
+      padding: 28px 0 50px;
+    }
+
+    .hero {
+      background: linear-gradient(120deg, #ffffff, #f4f1ff);
+      color: var(--ink);
+      border-radius: 20px;
+      padding: 26px;
+      border: 1px solid var(--line);
+      box-shadow: 0 16px 38px rgba(75, 38, 204, 0.1);
+      animation: fadeup 420ms ease-out;
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.5rem, 3vw, 2.2rem);
+      font-family: "Source Serif 4", serif;
+      letter-spacing: 0.3px;
+      color: var(--accent);
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 68ch;
+      color: var(--muted);
+    }
+
+    .grid {
+      display: grid;
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .kpis {
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 8px 20px rgba(31, 42, 47, 0.06);
+      animation: fadeup 500ms ease-out;
+    }
+
+    .card .label {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      text-transform: uppercase;
+    }
+
+    .card .value {
+      margin: 6px 0 0;
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .section-title {
+      margin: 26px 0 10px;
+      font-size: 1.2rem;
+      font-family: "Source Serif 4", serif;
+      color: #2f1f66;
+    }
+
+    .split {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: 1fr;
+    }
+
+    .insight {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .json-peek {
+      margin-top: 10px;
+      background: #0f172a;
+      color: #d9f5ff;
+      border-radius: 12px;
+      padding: 12px;
+      overflow-x: auto;
+      font-size: 0.83rem;
+      border: 1px solid #24324a;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 0.92rem;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      padding: 9px 8px;
+      white-space: nowrap;
+    }
+
+    th {
+      color: #204248;
+      background: #f2fbfa;
+      font-weight: 700;
+      position: sticky;
+      top: 0;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      max-height: 360px;
+    }
+
+    .region-list {
+      margin: 8px 0 0;
+      padding-left: 18px;
+      color: var(--muted);
+    }
+
+    .region-list li {
+      margin: 6px 0;
+    }
+
+    canvas {
+      max-height: 280px;
+    }
+
+    .definition {
+      background: var(--accent-soft);
+      border: 1px solid #cec2ff;
+      border-radius: 12px;
+      padding: 14px;
+      color: #2f1f66;
+      font-size: 0.95rem;
+    }
+
+    @media (min-width: 930px) {
+      .split {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @keyframes fadeup {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <section class="welcome-strip">
+      <p class="eyebrow">Welcome User</p>
+      <div class="row">
+        <h2 class="greeting" id="timeGreeting">Good day and welcome back.</h2>
+      </div>
+      <p class="subline">A quick glance at performance, styled for clarity.</p>
+    </section>
+
+    <section class="hero">
+      <h1>Sales Snapshot Dashboard</h1>
+      <p>
+        This page summarizes sales performance across region, channel, and category in one clean view.
+        It is designed to surface key numbers quickly while staying simple and readable.
+      </p>
+      <p style="margin-top: 10px;">
+        Current snapshot: {{ "{:,}".format(dashboard_data.record_count) }} records,
+        {{ dashboard_data.category_coverage }} categories, and average order value of
+        ${{ "{:,}".format(dashboard_data.avg_order_value) }}.
+      </p>
+    </section>
+
+    <section class="grid kpis">
+      <article class="card">
+        <p class="label">Total Sales</p>
+        <p class="value">${{ "{:,}".format(dashboard_data.kpis.total_sales) }}</p>
+      </article>
+      <article class="card">
+        <p class="label">Total Profit</p>
+        <p class="value">${{ "{:,}".format(dashboard_data.kpis.total_profit) }}</p>
+      </article>
+      <article class="card">
+        <p class="label">Total Orders</p>
+        <p class="value">{{ "{:,}".format(dashboard_data.kpis.total_orders) }}</p>
+      </article>
+      <article class="card">
+        <p class="label">Avg Satisfaction</p>
+        <p class="value">{{ dashboard_data.kpis.avg_satisfaction }}/5</p>
+      </article>
+      <article class="card">
+        <p class="label">Profit Margin</p>
+        <p class="value">{{ dashboard_data.kpis.profit_margin_pct }}%</p>
+      </article>
+    </section>
+
+    <h2 class="section-title">Snapshot Notes</h2>
+    <section class="split">
+      <article class="card">
+        <p class="insight">
+          This dataset contains <strong>{{ "{:,}".format(dashboard_data.record_count) }}</strong> records across
+          <strong>{{ dashboard_data.category_coverage }}</strong> product categories.
+          The numbers on this page are designed as a quick summary for everyday monitoring.
+        </p>
+        <p class="insight" style="margin-top: 8px;">
+          Average order value is currently <strong>${{ "{:,}".format(dashboard_data.avg_order_value) }}</strong>,
+          with a healthy balance between revenue, orders, and customer satisfaction.
+        </p>
+      </article>
+      <article class="card">
+        <p class="label">Quick Highlights</p>
+        <p class="insight">
+          Best single product by sales: <strong>{{ dashboard_data.top_product.Product }}</strong>
+          in {{ dashboard_data.top_product.Month }} ({{ dashboard_data.top_product.Region }}) with
+          ${{ "{:,}".format(dashboard_data.top_product.Sales) }} sales.
+        </p>
+        <p class="insight" style="margin-top: 8px;">
+          Top region: <strong>{{ dashboard_data.top_region.name }}</strong>
+          (${{ "{:,}".format(dashboard_data.top_region.sales) }}), and top channel:
+          <strong>{{ dashboard_data.top_channel.name }}</strong>
+          (${{ "{:,}".format(dashboard_data.top_channel.sales) }}).
+        </p>
+      </article>
+    </section>
+
+    <h2 class="section-title">Visualizations</h2>
+    <section class="split">
+      <article class="card">
+        <p class="label">Sales Share by Channel</p>
+        <p class="insight">Compares how much each sales channel contributes to total sales.</p>
+        <canvas id="channelShareChart"></canvas>
+      </article>
+      <article class="card">
+        <p class="label">Landing Highlights</p>
+        <p class="insight">
+          This page is intentionally compact and easy to scan: key metrics at the top,
+          one channel visualization in the middle, and short business notes below.
+        </p>
+        <p class="insight" style="margin-top: 8px;">
+          You can treat this section as placeholder content for announcements, campaign context,
+          or monthly commentary from the sales team.
+        </p>
+      </article>
+    </section>
+
+    <h2 class="section-title">Regional Summary</h2>
+    <section class="card">
+      <p class="definition">
+        Regional summary ranks regions by total sales. This helps quickly identify where performance is strongest.
+      </p>
+      <ol class="region-list">
+        {% for item in dashboard_data.region_summary %}
+          <li>{{ item.region }}: ${{ "{:,}".format(item.sales) }}</li>
+        {% endfor %}
+      </ol>
+    </section>
+
+    <h2 class="section-title">About This Dashboard</h2>
+    <section class="card">
+      <p class="definition">
+        This one-page dashboard focuses on clarity over complexity. It is a simple front door for sales information,
+        presenting headline performance, channel mix, and regional standings in a clean format.
+      </p>
+      <p class="insight" style="margin-top: 10px;">
+        Additional sections can be added here later for promotions, seasonal observations, or executive notes.
+      </p>
+    </section>
+  </main>
+
+  <script>
+    const channelLabels = {{ dashboard_data.channel_chart["labels"] | tojson }};
+    const channelValues = {{ dashboard_data.channel_chart["values"] | tojson }};
+
+    new Chart(document.getElementById("channelShareChart"), {
+      type: "doughnut",
+      data: {
+        labels: channelLabels,
+        datasets: [{
+          data: channelValues,
+          backgroundColor: ["#4b26cc", "#7d5bf0", "#d91f26"],
+          borderWidth: 1,
+          borderColor: "#ffffff"
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: "bottom"
+          }
+        }
+      }
+    });
+
+    const hour = new Date().getHours();
+    const greetingText = hour < 12
+      ? "Good morning, welcome back."
+      : hour < 17
+        ? "Good afternoon, welcome back."
+        : "Good evening, welcome back.";
+    document.getElementById("timeGreeting").textContent = greetingText;
+  </script>
+</body>
+</html>
